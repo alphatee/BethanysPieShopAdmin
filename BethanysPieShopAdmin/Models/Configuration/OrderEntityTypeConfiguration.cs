@@ -9,7 +9,7 @@ namespace BethanysPieShopAdmin.Models.Configuration
         {
             builder
                 .Property(b => b.ZipCode)
-                .IsRequired(); // Use FluentValidation for a message : "Please enter your zip code"
+                .IsRequired(); 
 
             builder
                 .Property(b => b.Email)

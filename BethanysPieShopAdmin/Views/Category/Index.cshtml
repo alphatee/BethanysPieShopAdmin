@@ -1,11 +1,11 @@
-﻿@model CategoryListViewModel 
+﻿@model CategoryListViewModel
 
 <h2>Categories</h2>
 <hr />
 
 @if (!Model.Categories.Any())
 {
-    <p>No results</p>
+    <tr><td colspan="3" class="text-center">No categories at this point</td></tr>
 }
 else
 {
@@ -30,3 +30,7 @@ else
         }
     </table>
 }
+<p>
+    <a class="btn btn-primary" asp-action="Add">Add new category</a>
+</p>
+

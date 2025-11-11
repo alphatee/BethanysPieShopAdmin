@@ -1,12 +1,20 @@
 
 using BethanysPieShopAdmin.Models;
 using BethanysPieShopAdmin.Models.Repositories;
+using BethanysPieShopAdmin.Models.Validators;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+
+// Register FluentValidation validators
+// This scans your assembly for all AbstractValidator<T> implementations
+builder.Services.AddValidatorsFromAssemblyContaining<OrderValidator>();
+
 
 builder.Services.AddDbContext<BethanysPieShopDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString
