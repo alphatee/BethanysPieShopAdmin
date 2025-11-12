@@ -31,13 +31,20 @@ namespace BethanysPieShopAdmin.Controllers
 
         public async Task<IActionResult> Add()
         {
-            var allCategories = await _categoryRepository.GetAllCategoriesAsync();
+            try
+            {
+                IEnumerable<Category>? allCategories = await _categoryRepository.GetAllCategoriesAsync();
+                IEnumerable<SelectListItem> selectListItems = new SelectList(allCategories, "CategoryId", "Name", null);
 
-            IEnumerable<SelectListItem> selectListItems = new SelectList(allCategories, "CategoryId", "Name", null);
+                PieAddViewModel pieAddViewModel = new() { Categories = selectListItems };
+                return View(pieAddViewModel);
+            }
+            catch (Exception ex)
+            {
+                ViewData["ErrorMessage"] = $"There was an error: {ex.Message}";
+            }
+            return View(new PieAddViewModel());
 
-            PieAddViewModel pieAddViewModel = new() { Categories = selectListItems };
-
-            return View(pieAddViewModel);
         }
 
         [HttpPost]
@@ -69,6 +76,53 @@ namespace BethanysPieShopAdmin.Controllers
 
             pieAddViewModel.Categories = selectListItems;
             return View(pieAddViewModel);
+        }
+
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var allCategories = await _categoryRepository.GetAllCategoriesAsync();
+
+            IEnumerable<SelectListItem> selectListItems = new SelectList(allCategories, "CategoryId", "Name", null);
+
+            var selectedPie = await _pieRepository.GetPieByIdAsync(id.Value);
+
+            PieEditViewModel pieEditViewModel = new() { Categories = selectListItems, Pie = selectedPie };
+            return View(pieEditViewModel);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(PieEditViewModel pieEditViewModel)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    await _pieRepository.UpdatePieAsync(pieEditViewModel.Pie);
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Updating the category failed, please try again! Error: {ex.Message}");
+            }
+
+            var allCategories = await _categoryRepository.GetAllCategoriesAsync();
+
+            IEnumerable<SelectListItem> selectListItems = new SelectList(allCategories, "CategoryId", "Name", null);
+
+            pieEditViewModel.Categories = selectListItems;
+
+            return View(pieEditViewModel);
         }
     }
 }

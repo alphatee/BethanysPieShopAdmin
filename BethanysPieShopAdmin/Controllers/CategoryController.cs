@@ -43,10 +43,17 @@ namespace BethanysPieShopAdmin.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(Category category)
         {
-            if (ModelState.IsValid)
+            try
             {
-                await _categoryRepository.AddCategoryAsync(category);
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    await _categoryRepository.AddCategoryAsync(category);
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Adding the category failed, please try again! Error: {ex.Message}");
             }
 
             return View(category);
