@@ -11,6 +11,7 @@ namespace BethanysPieShopAdmin.Controllers
         private readonly IPieRepository _pieRepository;
         private readonly ICategoryRepository _categoryRepository;
 
+
         public PieController(IPieRepository pieRepository, ICategoryRepository categoryRepository)
         {
             _pieRepository = pieRepository;
@@ -44,30 +45,37 @@ namespace BethanysPieShopAdmin.Controllers
                 ViewData["ErrorMessage"] = $"There was an error: {ex.Message}";
             }
             return View(new PieAddViewModel());
-
+           
         }
 
         [HttpPost]
         public async Task<IActionResult> Add(PieAddViewModel pieAddViewModel)
         {
-            if (ModelState.IsValid)
+            try
             {
-                Pie pie = new()
+                if (ModelState.IsValid)
                 {
-                    CategoryId = pieAddViewModel.Pie.CategoryId,
-                    ShortDescription = pieAddViewModel.Pie.ShortDescription,
-                    LongDescription = pieAddViewModel.Pie.LongDescription,
-                    Price = pieAddViewModel.Pie.Price,
-                    AllergyInformation = pieAddViewModel.Pie.AllergyInformation,
-                    ImageThumbnailUrl = pieAddViewModel.Pie.ImageThumbnailUrl,
-                    ImageUrl = pieAddViewModel.Pie.ImageUrl,
-                    InStock = pieAddViewModel.Pie.InStock,
-                    IsPieOfTheWeek = pieAddViewModel.Pie.IsPieOfTheWeek,
-                    Name = pieAddViewModel.Pie.Name
-                };
+                    Pie pie = new()
+                    {
+                        CategoryId = pieAddViewModel.Pie.CategoryId,
+                        ShortDescription = pieAddViewModel.Pie.ShortDescription,
+                        LongDescription = pieAddViewModel.Pie.LongDescription,
+                        Price = pieAddViewModel.Pie.Price,
+                        AllergyInformation = pieAddViewModel.Pie.AllergyInformation,
+                        ImageThumbnailUrl = pieAddViewModel.Pie.ImageThumbnailUrl,
+                        ImageUrl = pieAddViewModel.Pie.ImageUrl,
+                        InStock = pieAddViewModel.Pie.InStock,
+                        IsPieOfTheWeek = pieAddViewModel.Pie.IsPieOfTheWeek,
+                        Name = pieAddViewModel.Pie.Name
+                    };
 
-                await _pieRepository.AddPieAsync(pie);
-                return RedirectToAction(nameof(Index));
+                    await _pieRepository.AddPieAsync(pie);
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Adding the pie failed, please try again! Error: {ex.Message}");
             }
 
             var allCategories = await _categoryRepository.GetAllCategoriesAsync();
@@ -75,6 +83,7 @@ namespace BethanysPieShopAdmin.Controllers
             IEnumerable<SelectListItem> selectListItems = new SelectList(allCategories, "CategoryId", "Name", null);
 
             pieAddViewModel.Categories = selectListItems;
+
             return View(pieAddViewModel);
         }
 
@@ -123,6 +132,38 @@ namespace BethanysPieShopAdmin.Controllers
             pieEditViewModel.Categories = selectListItems;
 
             return View(pieEditViewModel);
+        }
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            var selectedCategory = await _pieRepository.GetPieByIdAsync(id);
+
+            return View(selectedCategory);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteConfirmed(int? pieId)
+        {
+            if (pieId == null)
+            {
+                ViewData["ErrorMessage"] = "Deleting the pie failed, invalid ID!";
+                return View();
+            }
+
+            try
+            {
+                await _pieRepository.DeletePieAsync(pieId.Value);
+                TempData["PieDeleted"] = "Pie deleted successfully!";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ViewData["ErrorMessage"] = $"Deleting the pie failed, please try again! Error: {ex.Message}";
+            }
+
+            var selectedPie = await _pieRepository.GetPieByIdAsync(pieId.Value);
+            return View(selectedPie);
         }
     }
 }

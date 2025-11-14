@@ -18,12 +18,13 @@ namespace BethanysPieShopAdmin.Models.Repositories
 
         public async Task<Pie?> GetPieByIdAsync(int pieId)
         {
-            return await _bethanysPieShopDbContext.Pies.Include(p => p.Ingredients).Include(p => p.Category).FirstOrDefaultAsync(p => p.PieId == pieId);
+            return await _bethanysPieShopDbContext.Pies.Include(p => p.Ingredients).Include(p => p.Category).AsNoTracking().FirstOrDefaultAsync(p => p.PieId == pieId);
         }
 
         public async Task<int> AddPieAsync(Pie pie)
         {
-            _bethanysPieShopDbContext.Pies.Add(pie);
+            //throw new Exception("Database down");
+            _bethanysPieShopDbContext.Pies.Add(pie);//could be done using async too
             return await _bethanysPieShopDbContext.SaveChangesAsync();
         }
 
@@ -50,6 +51,21 @@ namespace BethanysPieShopAdmin.Models.Repositories
             else
             {
                 throw new ArgumentException($"The pie to update can't be found.");
+            }
+        }
+
+        public async Task<int> DeletePieAsync(int id)
+        {
+            var pieToDelete = await _bethanysPieShopDbContext.Pies.FirstOrDefaultAsync(c => c.PieId == id);
+
+            if (pieToDelete != null)
+            {
+                _bethanysPieShopDbContext.Pies.Remove(pieToDelete);
+                return await _bethanysPieShopDbContext.SaveChangesAsync();
+            }
+            else
+            {
+                throw new ArgumentException($"The pie to delete can't be found.");
             }
         }
     }
